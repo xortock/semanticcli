@@ -45,7 +45,7 @@ func NewS3Service() *S3Service {
 	return &s3Service
 }
 
-func (service S3Service) CreateBucketIfNotExists(bucketName *string) error {
+func (service *S3Service) CreateBucketIfNotExists(bucketName *string) error {
 
 	var doesBucketExists = service.DoesBucketExists(bucketName)
 	if doesBucketExists {
@@ -80,7 +80,7 @@ func (service S3Service) GetFileContents(bucketName *string, fileName *string) (
 	return body, getObjectError
 }
 
-func (service S3Service) WriteFileContents(bucketName *string, fileName *string, content []byte) error {
+func (service *S3Service) WriteFileContents(bucketName *string, fileName *string, content []byte) error {
 	var putObjectInput = &s3.PutObjectInput{
 		Bucket: bucketName,
 		Key:    fileName,
@@ -92,7 +92,7 @@ func (service S3Service) WriteFileContents(bucketName *string, fileName *string,
 	return getObjectError
 }
 
-func (service S3Service) DoesFileExists(bucketName *string, fileName *string) bool {
+func (service *S3Service) DoesFileExists(bucketName *string, fileName *string) bool {
 	var headObjectInput = &s3.HeadObjectInput{
 		Bucket: bucketName,
 		Key:    fileName,
@@ -110,7 +110,7 @@ func (service S3Service) DoesFileExists(bucketName *string, fileName *string) bo
 	return true
 }
 
-func (service S3Service) DoesBucketExists(bucketName *string) bool {
+func (service *S3Service) DoesBucketExists(bucketName *string) bool {
 	var headBucketInput = &s3.HeadBucketInput{
 		Bucket: bucketName,
 	}

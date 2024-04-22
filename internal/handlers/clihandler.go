@@ -27,14 +27,14 @@ func NewCliHandler() *CliHandler {
 	}
 }
 
-func (handler CliHandler) Handle(context *cli.Context) error {
+func (handler *CliHandler) Handle(context *cli.Context) error {
 	var bucketName = context.String(flags.BUCKET)
 	var fileName = context.String(flags.FILE)
 
 	// Create private s3 bucket if it does not exist yet
 	var createBucketError = handler.s3Service.CreateBucketIfNotExists(&bucketName)
 	if createBucketError != nil {
-		cli.Exit(createBucketError, 1)
+		return cli.Exit(createBucketError, 1)
 	}
 
 	// Check if file inside that bucket with that name already exists
@@ -49,43 +49,62 @@ func (handler CliHandler) Handle(context *cli.Context) error {
 		}
 	}
 
-	var version models.Version
-
-	// Get the current version file and unmarshal it into a version model
-	var content, getVersionError = handler.s3Service.GetFileContents(&bucketName, &fileName)
-	if getVersionError != nil {
-		return cli.Exit(getVersionError, 1)
-	}
-	json.Unmarshal(content, &version)
-
 	if handler.ContainsDistinctFlags(context, []string{flags.MAJOR, flags.MINOR, flags.PATCH, flags.BUILD}) {
-
-		var previousVersion = version
-		// Apply all version mutations
-		var flagError = handler.ApplyAllVersionFlags(context, &version)
-		if flagError != nil {
-			return cli.Exit(flagError, 1)
-		}
-
-		handler.ApplyVersionReset(&version, &previousVersion)
-
-		// marshal current version and write to version file
-		var newVersionContent, _ = json.Marshal(version)
-		var newVersionContentError = handler.s3Service.WriteFileContents(&bucketName, &fileName, newVersionContent)
-		if newVersionContentError != nil {
-			return cli.Exit(newVersionContentError, 1)
-		}
-
-		return cli.Exit(version.ToString(), 0)
+		// handle version update request
+		var message, exitCode = handler.HandleVersionUpdateRequest(context, &bucketName, &fileName)
+		return cli.Exit(message, exitCode)
 
 	} else if handler.ContainsDistinctFlags(context, []string{flags.DETAILS}) {
-		return cli.Exit(version.ToString(), 0)
+		var message, exitCode = handler.HandleVersionGetRequest(context, &bucketName, &fileName)
+		return cli.Exit(message, exitCode)
 	}
 
 	return cli.Exit("this combination of flags is not supported", 0)
 }
 
-func (handler CliHandler) ContainsDistinctFlags(context *cli.Context, validFlags []string) bool {
+func (handler *CliHandler) HandleVersionUpdateRequest(context *cli.Context, bucketName *string, fileName *string) (string, int) {
+	var version models.Version
+
+	// Get the current version file and unmarshal it into a version model
+	var content, getVersionError = handler.s3Service.GetFileContents(bucketName, fileName)
+	if getVersionError != nil {
+		return getVersionError.Error(), 1
+	}
+	json.Unmarshal(content, &version)
+
+	var previousVersion = version
+	// Apply all version mutations
+	var flagError = handler.ApplyAllVersionFlags(context, &version)
+	if flagError != nil {
+		return flagError.Error(), 1
+	}
+
+	handler.ApplyVersionReset(&version, &previousVersion)
+
+	// marshal current version and write to version file
+	var newVersionContent, _ = json.Marshal(version)
+	var newVersionContentError = handler.s3Service.WriteFileContents(bucketName, fileName, newVersionContent)
+	if newVersionContentError != nil {
+		return newVersionContentError.Error(), 1
+	}
+
+	return version.ToString(), 0
+}
+
+func (handler *CliHandler) HandleVersionGetRequest(context *cli.Context, bucketName *string, fileName *string) (string, int) {
+	var version models.Version
+
+	// Get the current version file and unmarshal it into a version model
+	var content, getVersionError = handler.s3Service.GetFileContents(bucketName, fileName)
+	if getVersionError != nil {
+		return getVersionError.Error(), 1
+	}
+	json.Unmarshal(content, &version)
+
+	return version.ToString(), 0
+}
+
+func (handler *CliHandler) ContainsDistinctFlags(context *cli.Context, validFlags []string) bool {
 
 	validFlags = append(validFlags, flags.BUCKET)
 	validFlags = append(validFlags, flags.FILE)
@@ -98,7 +117,7 @@ func (handler CliHandler) ContainsDistinctFlags(context *cli.Context, validFlags
 	return slices.Equal(validFlags, cliFlags)
 }
 
-func (handler CliHandler) ApplyAllVersionFlags(context *cli.Context, version *models.Version) error {
+func (handler *CliHandler) ApplyAllVersionFlags(context *cli.Context, version *models.Version) error {
 	// Apply all version mutations
 	var majorFlagError = handler.ApplyVersionFlag(context.String(flags.MAJOR), &version.Major)
 	if majorFlagError != nil {
@@ -123,11 +142,13 @@ func (handler CliHandler) ApplyAllVersionFlags(context *cli.Context, version *mo
 	return nil
 }
 
-func (handler CliHandler) ApplyVersionFlag(flag string, version *int) error {
+func (handler *CliHandler) ApplyVersionFlag(flag string, version *int) error {
+	// if the input is a - apply not change to the version
 	if flag == "-" {
 		return nil
 	}
 
+	// check if input is numerical and does not contains a - or + operator to indicate a change in value
 	if helpers.IsNumerical(flag) && !strings.Contains(flag, "+") && !strings.Contains(flag, "-") {
 		var parsedResult, firstConvertError = strconv.Atoi(flag)
 		if firstConvertError != nil {
@@ -137,16 +158,19 @@ func (handler CliHandler) ApplyVersionFlag(flag string, version *int) error {
 		return nil
 	}
 
+	// check the first character of the input is it is not a + operator it is a invalid operator
 	var flagCharacters = []rune(flag)
 	if flagCharacters[0] != '+' {
-		return errors.New("invalid operator used")
+		return errors.New("invalid input: " + string(flagCharacters[0]) + " is not a valid operator (valid operators [ + ])")
 	}
 
+	// check all character after the first character if is not a numeric value
 	var flagValues = string(flagCharacters[1:])
 	if !helpers.IsNumerical(flagValues) {
-		return errors.New("Argument for: " + flag + " is to complicated")
+		return errors.New("invalid input: " + flagValues + " is not a numeric value")
 	}
 
+	// convert the validated input to a int
 	var parsedResult, firstConvertError = strconv.Atoi(flagValues)
 	if firstConvertError != nil {
 		return firstConvertError
@@ -156,7 +180,8 @@ func (handler CliHandler) ApplyVersionFlag(flag string, version *int) error {
 	return nil
 }
 
-func (handler CliHandler) ApplyVersionReset(currentVersion *models.Version, previousVersion *models.Version) {
+func (handler *CliHandler) ApplyVersionReset(currentVersion *models.Version, previousVersion *models.Version) {
+	// Reset lower version based on semantic version increase
 	if currentVersion.Patch > previousVersion.Patch {
 		currentVersion.Build = 0
 	}
