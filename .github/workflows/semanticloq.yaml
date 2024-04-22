@@ -1,0 +1,66 @@
+name: 'semanticloq'
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+    SEMANTICLOQ_DISTRIBUTIONS_BUCKET: semanticloq-distributions
+
+jobs:
+    build:
+        environment: DEV 
+        name: 'semanticloq'
+        runs-on: ubuntu-latest
+        steps:
+        - name: 'Checkout'
+          uses: actions/checkout@main
+
+        - name: Setup Go 1.21.x
+          uses: actions/setup-go@v4
+          with:
+            # Semantic version range syntax or exact version of Go
+            go-version: '1.21.x'
+    
+        - name: Cross platform compilation
+          run: | 
+            ./.github/scripts/cross-platform-compilation.sh ./main.go
+
+        - uses: actions/upload-artifact@v4
+          with:
+            name: semanticloq-distributions-v1.0.0.0
+            path: bin/
+
+    deploy:
+        environment: DEV 
+        name: 'semanticloq'
+        runs-on: ubuntu-latest
+        steps:
+        - name: 'Checkout'
+          uses: actions/checkout@main
+        
+        - name: Approve deployment
+          if: github.event_name != 'pull_request'
+          uses: trstringer/manual-approval@v1
+          with:
+            secret: ${{ secrets.GITHUB_TOKEN }}
+            approvers: Xortock
+            minimum-approvals: 1
+            issue-title: "Apply terraform plan"
+            issue-body: "Please approve or deny the deployment of the terraform plan"
+            
+        - name: Create semanticloq-distributions bucket
+          run: |
+            set +e
+            aws s3 mb s3://$SEMANTICLOQ_DISTRIBUTIONS_BUCKET
+            if [[ $? -eq 0 ]]; then
+                echo "s3 bucket being created"
+            else
+                echo "s3 bucket already exists"
+            fi
+            env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
