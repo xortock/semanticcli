@@ -52,6 +52,7 @@ jobs:
             issue-body: "Please approve or deny the deployment of the terraform plan"
             
         - name: Create semanticloq-distributions bucket
+          if: github.event_name != 'pull_request'
           run: |
             set +e
             aws s3 mb s3://$SEMANTICLOQ_DISTRIBUTIONS_BUCKET
