@@ -33,7 +33,7 @@ semanticloq --bucket semantic-versioning --file api-version --major 1 --minor 1 
 semanticloq --bucket semantic-versioning --file api-version --details
 
 ```
-1st output: 
+output: 
 > 1.1.0.3
 
 # Storage
@@ -42,4 +42,4 @@ for the storage of the version file you have the option to pass in a bucket name
 
 # s3 Credentials
 
-semanticloq will load configuration from environment variables, AWS shared configuration file (~/.aws/config), and AWS shared credentials file (~/.aws/credentials). To determine the Aws_Access_Key_Id, Aws_Secret_Access_Key_Id and Aws_Region
+semanticloq will load configuration from environment variables, AWS shared configuration file (.aws/config), and AWS shared credentials file (.aws/credentials). To determine the Aws_Access_Key_Id, Aws_Secret_Access_Key_Id and Aws_Region

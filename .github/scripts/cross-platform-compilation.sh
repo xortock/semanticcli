@@ -16,7 +16,7 @@ do
 	platform_split=(${platform//\// })
 	GOOS=${platform_split[0]}
 	GOARCH=${platform_split[1]}
-	output_name=$package_name'-'$GOOS'-'$GOARCH
+	output_name=semanticloq-$GOOS'-'$GOARCH
 	if [ $GOOS = "windows" ]; then
 		output_name+='.exe'
 	fi	
