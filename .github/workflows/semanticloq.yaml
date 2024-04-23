@@ -61,18 +61,18 @@ jobs:
           if: github.event_name != 'pull_request'
           run: |
             set +e
+            aws s3api create-bucket --bucket $SEMANTICLOQ_DISTRIBUTIONS_BUCKET --region $AWS_DEFAULT_REGION --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION --acl public-read
             aws s3 mb s3://$SEMANTICLOQ_DISTRIBUTIONS_BUCKET
             if [[ $? -eq 0 ]]; then
                 echo "s3 bucket being created"
             else
                 echo "s3 bucket already exists"
             fi
-
-            aws s3api put-bucket-acl --bucket $SEMANTICLOQ_DISTRIBUTIONS_BUCKET --acl public-read
           env:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+
         - name: Generate ssh-keypair if not exists
           run: |
             set +e
