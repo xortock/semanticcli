@@ -42,15 +42,15 @@ jobs:
         - name: 'Checkout'
           uses: actions/checkout@main
         
-        - name: Approve deployment
-          if: github.event_name != 'pull_request'
-          uses: trstringer/manual-approval@v1
-          with:
-            secret: ${{ secrets.GITHUB_TOKEN }}
-            approvers: Xortock
-            minimum-approvals: 1
-            issue-title: "Apply terraform plan"
-            issue-body: "Please approve or deny the deployment of the terraform plan"
+        # - name: Approve deployment
+        #   if: github.event_name != 'pull_request'
+        #   uses: trstringer/manual-approval@v1
+        #   with:
+        #     secret: ${{ secrets.GITHUB_TOKEN }}
+        #     approvers: Xortock
+        #     minimum-approvals: 1
+        #     issue-title: "Distribute to s3"
+        #     issue-body: "Please approve or deny the distribution to s3"
             
         - uses: actions/download-artifact@v4
           with:
