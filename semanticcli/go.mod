@@ -1,4 +1,4 @@
-module github.com/xortock/semanticloq
+module github.com/xortock/semanticcli
 
 go 1.22.1
 
