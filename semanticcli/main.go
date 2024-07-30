@@ -4,19 +4,19 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v2"
-	"github.com/xortock/semanticloq/internal/flags"
-	"github.com/xortock/semanticloq/internal/handlers"
+	"github.com/xortock/semanticcli/internal/flags"
+	"github.com/xortock/semanticcli/internal/handlers"
 )
 
-var Version = "1.0.0.0"
+var version = "0.0.0.0"
 
 func main() {
 
 	var cliHandler = handlers.NewCliHandler()
 
 	var app = &cli.App{
-		Name: "semanticloq",
-		Version: Version,
+		Name:    "semanticcli",
+		Version: version,
 		Authors: []*cli.Author{
 			{
 				Name:  "xortock",
@@ -24,17 +24,16 @@ func main() {
 			},
 		},
 		Copyright:       "(C) 2024 xortock",
-		HideHelp:        true,
-		HideHelpCommand: false,
+		HideHelp:        false,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     flags.BUCKET,
-				Usage:    "s3 bucket to use",
+				Usage:    "s3 bucket to use [required]",
 				Required: true,
 			},
 			&cli.StringFlag{
 				Name:     flags.FILE,
-				Usage:    "file name used to store version",
+				Usage:    "file name used to store version [required]",
 				Required: true,
 			},
 			&cli.StringFlag{

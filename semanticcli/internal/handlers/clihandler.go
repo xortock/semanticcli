@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
-	"github.com/xortock/semanticloq/internal/flags"
-	"github.com/xortock/semanticloq/internal/helpers"
-	"github.com/xortock/semanticloq/internal/models"
-	"github.com/xortock/semanticloq/internal/services"
+	"github.com/xortock/semanticcli/internal/flags"
+	"github.com/xortock/semanticcli/internal/helpers"
+	"github.com/xortock/semanticcli/internal/models"
+	"github.com/xortock/semanticcli/internal/services"
 )
 
 type ICliHandler interface {

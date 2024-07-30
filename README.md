@@ -1,4 +1,4 @@
-# SemanticLoq
+# semanticcli
 
 Semantic loq is a cli tool meant for the distributed storage of the semantic versions of you applications. It is well suited for the CI/CD processes where application get their version post build.
 
@@ -9,7 +9,7 @@ Semantic loq is a cli tool meant for the distributed storage of the semantic ver
 ## Set static version
 
 ```sh
-semanticloq --bucket semantic-versioning --file api-version --major 1 --minor 1 --patch 0 --build 1
+semanticcli --bucket semantic-versioning --file api-version --major 1 --minor 1 --patch 0 --build 1
 
 ```
 output: 
@@ -18,7 +18,7 @@ output:
 ## Auto increase build version (also applies to other versions)
 
 ```sh
-semanticloq --bucket semantic-versioning --file api-version --major 1 --minor 1 --patch 0 --build +1
+semanticcli --bucket semantic-versioning --file api-version --major 1 --minor 1 --patch 0 --build +1
 
 ```
 1st output: 
@@ -30,10 +30,10 @@ semanticloq --bucket semantic-versioning --file api-version --major 1 --minor 1 
 ## Get current version
 
 ```sh
-semanticloq --bucket semantic-versioning --file api-version --details
+semanticcli --bucket semantic-versioning --file api-version --details
 
 ```
-1st output: 
+output: 
 > 1.1.0.3
 
 # Storage
@@ -42,4 +42,4 @@ for the storage of the version file you have the option to pass in a bucket name
 
 # s3 Credentials
 
-semanticloq will load configuration from environment variables, AWS shared configuration file (~/.aws/config), and AWS shared credentials file (~/.aws/credentials). To determine the Aws_Access_Key_Id, Aws_Secret_Access_Key_Id and Aws_Region
+semanticcli will load configuration from environment variables, AWS shared configuration file (.aws/config), and AWS shared credentials file (.aws/credentials). To determine the Aws_Access_Key_Id, Aws_Secret_Access_Key_Id and Aws_Region
